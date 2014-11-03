@@ -52,6 +52,9 @@ class Builder( object ):
     # configure the output file
     arguments.extend( ['--output_file', config.BUILD_OUTPUT_PATH] )
 
+    arguments.extend( ['-f','--create_source_map=source.js.map'] )
+    arguments.extend( ['-f','--source_map_format=V3'])
+
     # configure additional compiler arguments
     arguments.extend( [ '-f', '--warning_level=VERBOSE'] ) # verbose
     arguments.extend( [ '-f', '--compilation_level=ADVANCED_OPTIMIZATIONS'] ) # advanced compilation

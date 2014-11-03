@@ -120,6 +120,8 @@ X.parserVTK.prototype.parse = function(container, object, data, flag) {
   // one type of pointData are normals and right now the only supported ones
   this._normalsMode = false;
   
+  // if LINE indicies takes more than one line to describe, this is the temporary older for the coming indices value
+  this._cur_line_ind = 0;
 
   //
   // LOOP THROUGH ALL LINES
@@ -354,20 +356,42 @@ X.parserVTK.prototype.parseLine = function(line) {
     
     // in geometryMode, each line has indices which map to points and pointsData
     
-    if (numberOfLineFields == 1 || isNaN(parseFloat(firstLineField))) {
+    // if the line is empty, skip it, but we are still in geometry mode
+    if (firstLineField == '')
+    	return;
+    	
+    if (isNaN(parseFloat(firstLineField))) {
       
       // this likely means end of geometryMode
       this._geometryMode = false;
       return;
       
     }
-    
-    // the first element is the number of coming indices
-    // so we just slice the first element to get all indices
-    var values = lineFields.slice(1);
-    
-    // append all index values to the main geometries array
-    this._geometries.push(values);
+    // if the number of fields > 1, then a LINE indices is descibed in only one line.
+    if (numberOfLineFields > 1) {
+		// the first element is the number of coming indices
+		// so we just slice the first element to get all indices
+		var values = lineFields.slice(1);
+		
+		// append all index values to the main geometries array
+		this._geometries.push(values);
+    }
+    else {
+    	var last_ind = this._geometries.length-1;
+    	// only one number per line, first occurance of number is the # of coming indicies
+    	var indInt = parseInt(firstLineField)
+		if (this._cur_line_ind == 0)
+		{
+			// start an new LINE geometry
+			this._geometries.push([]);
+			this._cur_line_ind = indInt;			
+		}    	
+		else {
+			var cur_line = this._geometries[last_ind]
+			cur_line.push(indInt);
+			this._cur_line_ind--;
+		}
+    }
     
   } // end of geometryMode
   else if (this._pointDataMode) {
